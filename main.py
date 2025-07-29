@@ -10,7 +10,7 @@ WALLET_ADDRESS = os.environ.get("WALLET_ADDRESS")
 
 TOKEN_NAME = "PEA"
 PEA_PER_SOL = 2250
-IMAGE_URL = "https://ibb.co/Cptm2ZF1"  # link immagine PepaMoon con scritta BUY ALERT
+IMAGE_URL = "https://i.ibb.co/7xzj45FY/D4-FE695-E-5-BE0-4-CB0-A9-AB-E4-EAC5-F54853.png"  # link immagine PepaMoon con scritta BUY ALERT
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
