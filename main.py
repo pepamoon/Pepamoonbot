@@ -2,20 +2,20 @@ import os
 import requests
 from telegram import Bot
 
-# Variabili ambiente
+# Variabili di ambiente (saranno fornite da GitHub Secrets)
 TELEGRAM_TOKEN = os.environ.get("TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("CHAT_ID")
 WALLET_ADDRESS = os.environ.get("WALLET_ADDRESS")
 
 TOKEN_NAME = "PEA"
 PEA_PER_SOL = 2250
-IMAGE_URL = "https://i.ibb.co/7xzJ45FY/D4-FE695-E-5-BE0-4-CB0-A9-AB-E4-EAC5-F54853.png"
+IMAGE_URL = "https://i.ibb.co/S36RGCS/pepamoon-buy-alert.png"  # modifica con il tuo link reale
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
 def get_sol_price():
-    url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
     try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
         response = requests.get(url)
         if response.ok:
             return response.json()["solana"]["usd"]
@@ -47,7 +47,7 @@ def format_message(sol_received, signature, usd_value, tokens):
         f"🔗 <a href=\"{tx_link}\">Visualizza Transazione</a>\n"
     )
 
-def main():
+def notify_buy():
     txs = fetch_transactions(WALLET_ADDRESS)
     if not txs:
         return
@@ -55,14 +55,7 @@ def main():
     latest_tx = txs[0]
     signature = latest_tx.get("signature")
     sol_received = is_incoming_sol(latest_tx, WALLET_ADDRESS)
-    
-    # File locale per evitare doppia notifica
-    if os.path.exists("last.txt"):
-        with open("last.txt") as f:
-            last_sig = f.read().strip()
-            if last_sig == signature:
-                return
-    
+
     if sol_received > 0:
         sol_price = get_sol_price()
         usd_value = round(sol_received * sol_price, 2)
@@ -76,8 +69,5 @@ def main():
             parse_mode="HTML"
         )
 
-        # Salva ultima signature
-        with open("last.txt", "w") as f:
-            f.write(signature)
-
-main()
+# Esegui una sola volta (ideale per GitHub Actions)
+notify_buy()
