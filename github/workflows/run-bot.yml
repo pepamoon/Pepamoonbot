@@ -23,4 +23,4 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           WALLET_ADDRESS: ${{ secrets.WALLET_ADDRESS }}
-        run: python main.pyp
+        run: python main.py
