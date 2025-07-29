@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from telegram import Bot
 
@@ -13,7 +14,9 @@ IMAGE_URL = "https://ibb.co/Cptm2ZF1"  # link immagine PepaMoon con scritta BUY 
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# 🔄 Ottieni il prezzo attuale di Solana in USD da CoinGecko
+# Salva l’ultima transazione già notificata per evitare duplicati
+last_notified_signature = None
+
 def get_sol_price():
     url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
     try:
@@ -22,13 +25,11 @@ def get_sol_price():
             return response.json()["solana"]["usd"]
     except:
         pass
-    return 0  # fallback
+    return 0
 
 def fetch_transactions(wallet_address):
     url = f"https://public-api.solscan.io/account/transactions?account={wallet_address}&limit=1"
-    headers = {
-        "accept": "application/json"
-    }
+    headers = {"accept": "application/json"}
     response = requests.get(url, headers=headers)
     if response.ok:
         return response.json()
@@ -46,19 +47,22 @@ def format_message(sol_received, signature, usd_value, tokens):
         "🚨 <b>BUY ALERT</b> 🚨\n"
         f"💰 Spesa: <b>{sol_received:.4f} SOL</b>\n"
         f"💸 Valore: <b>${usd_value}</b>\n"
-        f"📦 Ricevuti: <b>{tokens} {TOKEN_NAME}</b>\n"
+        f"🐸 Ricevuti: <b>{tokens} {TOKEN_NAME}</b>\n"
         f"🔗 <a href=\"{tx_link}\">Visualizza Transazione</a>\n"
     )
 
 def notify_buy():
+    global last_notified_signature
     txs = fetch_transactions(WALLET_ADDRESS)
     if not txs:
         return
 
     latest_tx = txs[0]
     signature = latest_tx.get("signature")
-    sol_received = is_incoming_sol(latest_tx, WALLET_ADDRESS)
+    if signature == last_notified_signature:
+        return  # già notificata
 
+    sol_received = is_incoming_sol(latest_tx, WALLET_ADDRESS)
     if sol_received > 0:
         sol_price = get_sol_price()
         usd_value = round(sol_received * sol_price, 2)
@@ -71,6 +75,9 @@ def notify_buy():
             caption=message,
             parse_mode="HTML"
         )
+        last_notified_signature = signature
 
-# Esegui una volta (puoi usare schedulazione su Render per farlo ogni tot)
-notify_buy()
+# 🔁 Loop infinito con attesa
+while True:
+    notify_buy()
+    time.sleep(60)  # ogni 60 secondi
