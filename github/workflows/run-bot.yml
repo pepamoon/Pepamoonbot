@@ -1,3 +1,5 @@
+name: Notify Buy  # <--- questa riga è opzionale ma consigliata per identificare il workflow
+
 on:
   schedule:
     - cron: '*/5 * * * *'
